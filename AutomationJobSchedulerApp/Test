@@ -1,0 +1,44 @@
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import java.io.File;
+import java.io.IOException;
+
+public class UpdateJsonFile {
+    public static void main(String[] args) {
+        int n = 3; // Number of times to repeat the template transactiondetails
+
+        try {
+            // Create an ObjectMapper
+            ObjectMapper objectMapper = new ObjectMapper();
+
+            // Read the existing JSON file
+            File inputFile = new File("input.json");
+            JsonNode rootNode = objectMapper.readTree(inputFile);
+
+            // Get the "transaction" array from the root node
+            ArrayNode transactionArray = (ArrayNode) rootNode.get("transaction");
+
+            // Get the template "transactiondetails" object
+            ObjectNode templateTransactionDetails = (ObjectNode) transactionArray.get(0).get("transactiondetails");
+
+            // Create new "transactiondetails" objects by cloning the template
+            for (JsonNode transactionNode : transactionArray) {
+                ObjectNode transactionDetails = (ObjectNode) transactionNode.get("transactiondetails");
+                transactionDetails.removeAll(); // Clear existing data
+
+                for (int i = 1; i <= n; i++) {
+                    transactionDetails.set("detail" + i, templateTransactionDetails.deepCopy());
+                }
+            }
+
+            // Write the updated JSON back to the file
+            objectMapper.writerWithDefaultPrettyPrinter().writeValue(new File("output.json"), rootNode);
+            System.out.println("JSON file updated successfully.");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
